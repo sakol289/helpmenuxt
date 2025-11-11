@@ -258,3 +258,6 @@ watch(count, (newVal, oldVal) => {
 
 ## Component Communication
 คือการส่งค่าจากหน้าเว็บหนึ่งไปหน้าเว็บอื่น
+
+
+aa
