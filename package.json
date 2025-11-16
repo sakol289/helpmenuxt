@@ -1,0 +1,22 @@
+{
+  "name": "loveyou",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxt/ui": "^4.1.0",
+    "@tailwindcss/vite": "^4.1.17",
+    "mysql2": "^3.15.3",
+    "nuxt": "^4.2.1",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.9.3",
+    "vue": "^3.5.24",
+    "vue-router": "^4.6.3"
+  }
+}
