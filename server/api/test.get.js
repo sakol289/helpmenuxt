@@ -1,10 +1,10 @@
+import connection from "../utils/db.js";
+
 export default defineEventHandler(async (event) => {
+  const [rows] = await connection.query('SELECT * FROM users');
   return {
     success: true,
     message: 'users',
-    data: {
-      name: 'John Doe',
-      age: 20
-    }
-  }    
+    data: rows
+  }
 })
