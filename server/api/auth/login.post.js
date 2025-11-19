@@ -29,10 +29,13 @@ export default defineEventHandler(async (event) => {
 
     if (users.length === 0) {
       console.log('❌ [LOGIN] ไม่พบผู้ใช้ที่มี email:', email)
-      throw createError({
-        statusCode: 401,
-        message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
-      })
+      return {
+        status: "error",
+        message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
+        data: {
+          details: 'ไม่พบผู้ใช้ที่มี email:' + email
+        }
+      }
     }
 
     const user = users[0]
@@ -50,33 +53,17 @@ export default defineEventHandler(async (event) => {
     // ตรวจสอบรหัสผ่าน
     console.log('🔑 [LOGIN] กำลังตรวจสอบรหัสผ่าน...')
     let isPasswordValid = false
-    
-    // ตรวจสอบว่า password ถูก hash แล้วหรือยัง (bcrypt hash ขึ้นต้นด้วย $2)
-    if (user.password.startsWith('$2')) {
-      console.log('🔐 [LOGIN] Password ถูก hash แล้ว ใช้ bcrypt.compare')
-      isPasswordValid = await bcrypt.compare(password, user.password)
-    } else {
-      console.log('⚠️ [LOGIN] Password ยังไม่ถูก hash เปรียบเทียบตรงๆ')
-      isPasswordValid = password === user.password
-      
-      // ถ้า password ถูกต้อง ให้ hash และอัปเดตในฐานข้อมูล
-      if (isPasswordValid) {
-        console.log('🔄 [LOGIN] Password ถูกต้อง กำลัง hash และอัปเดตในฐานข้อมูล...')
-        const hashedPassword = await bcrypt.hash(password, 10)
-        await connection.query(
-          'UPDATE users SET password = ? WHERE id = ?',
-          [hashedPassword, user.id]
-        )
-        console.log('✅ [LOGIN] Hash และอัปเดต password สำเร็จ')
-      }
-    }
+    isPasswordValid = await bcrypt.compare(password, user.password)
 
     if (!isPasswordValid) {
       console.log('❌ [LOGIN] รหัสผ่านไม่ถูกต้อง')
-      throw createError({
-        statusCode: 401,
-        message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
-      })
+      return {
+        status: "error",
+        message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
+        data: {
+          details: 'รหัสผ่านไม่ถูกต้อง'
+        }
+      }
     }
 
     console.log('✅ [LOGIN] รหัสผ่านถูกต้อง กำลังสร้าง JWT token...')
@@ -114,7 +101,7 @@ export default defineEventHandler(async (event) => {
 
     console.log('✅ [LOGIN] Login สำเร็จ!')
     return {
-      success: true,
+      status: "success",
       message: 'เข้าสู่ระบบสำเร็จ',
       data: {
         user: userWithoutPassword,
@@ -122,17 +109,26 @@ export default defineEventHandler(async (event) => {
       }
     }
   } catch (error) {
-    // ถ้าเป็น error ที่สร้างด้วย createError ให้ throw ต่อ
+    console.error('❌ [LOGIN] ไม่สามารถเข้าสู่ระบบได้:', {
+      message: error.message,
+      stack: error.stack
+    })
+
     if (error.statusCode) {
-      throw error
+      throw createError({
+        statusCode: error.statusCode,
+        message: error.message,
+        data: {
+          details: error.data || null
+        }
+      })
     }
 
-    // ถ้าเป็น error อื่นๆ
     throw createError({
       statusCode: 500,
       message: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ',
       data: {
-        error: error.message
+        details: error.message
       }
     })
   }
