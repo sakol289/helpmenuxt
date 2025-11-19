@@ -1,11 +1,3 @@
-CREATE TABLE `CategoryEvaluation` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `code` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL, 
-  `description` text COLLATE utf8mb4_unicode_ci,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 CREATE TABLE `TopicEvaluation` (
 	`id` int NOT NULL AUTO_INCREMENT,
 	`code` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -14,5 +6,15 @@ CREATE TABLE `TopicEvaluation` (
 	start_date date NOT NULL,
 	end_date date NOT NULL,
 	description text COLLATE utf8mb4_unicode_ci,
+	PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `CategoryEvaluation` (
+	`id` int NOT NULL AUTO_INCREMENT,
+	`code` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+	`name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL, 
+	`description` text COLLATE utf8mb4_unicode_ci,
+	topic_evaluation_id int NOT NULL,
+	FOREIGN KEY (topic_evaluation_id) REFERENCES TopicEvaluation(id),
 	PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
