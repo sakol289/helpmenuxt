@@ -1,102 +1,102 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+  <div class="min-h-screen flex items-center justify-center bg-gray-100">
+    <div class="w-full max-w-sm bg-white p-6 rounded-lg shadow">
+      <h2 class="text-2xl font-bold text-center mb-4">เข้าสู่ระบบ</h2>
+
+      <form @submit.prevent="onSubmit" class="space-y-4">
+        <input
+          v-model="email"
+          type="email"
+          placeholder="อีเมล"
+          class="w-full border rounded p-2"
+          required
+        />
+
+        <input
+          v-model="password"
+          type="password"
+          placeholder="รหัสผ่าน"
+          class="w-full border rounded p-2"
+          required
+        />
+
+        <p v-if="errorMsg" class="text-red-600 text-sm">{{ errorMsg }}</p>
+
+        <button
+          type="submit"
+          class="w-full bg-indigo-600 text-white p-2 rounded hover:bg-indigo-700"
+        >
           เข้าสู่ระบบ
-        </h2>
-      </div>
-      <form class="mt-8 space-y-6" @submit.prevent="handleLogin">
-        <div class="rounded-md shadow-sm -space-y-px">
-          <div>
-            <label for="email" class="sr-only">อีเมล</label>
-            <input
-              id="email"
-              v-model="form.email"
-              name="email"
-              type="email"
-              autocomplete="email"
-              required
-              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="อีเมล"
-            />
-          </div>
-          <div>
-            <label for="password" class="sr-only">รหัสผ่าน</label>
-            <input
-              id="password"
-              v-model="form.password"
-              name="password"
-              type="password"
-              autocomplete="current-password"
-              required
-              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="รหัสผ่าน"
-            />
-          </div>
-        </div>
-
-        <div v-if="error" class="rounded-md bg-red-50 p-4">
-          <div class="text-sm text-red-800">{{ error }}</div>
-        </div>
-
-        <div>
-          <button
-            type="submit"
-            :disabled="loading"
-            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span v-if="loading">กำลังเข้าสู่ระบบ...</span>
-            <span v-else>เข้าสู่ระบบ</span>
-          </button>
-        </div>
+        </button>
       </form>
     </div>
   </div>
 </template>
-
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
+import { useAuthStore } from '~/stores/auth'
 
-definePageMeta({
-  layout: false
+definePageMeta({ layout: false })
+
+const auth = useAuthStore()
+
+// เช็คว่า login แล้วหรือยังเมื่อโหลดหน้า
+onMounted(() => {
+  // Init auth จาก localStorage ถ้ายังไม่ได้ init
+  if (process.client && !auth.isAuthenticated) {
+    auth.initAuth()
+  }
+  
+  // ถ้า login แล้วให้ redirect
+  if (auth.isAuthenticated && auth.user) {
+    console.log('✅ [LOGIN PAGE] Login แล้ว redirect ไปหน้า /')
+    navigateTo('/')
+    return
+  }
+  
+  // ตรวจสอบ cookie
+  const token = useCookie('auth-token')
+  if (token.value) {
+    console.log('✅ [LOGIN PAGE] พบ token ใน cookie redirect ไปหน้า /')
+    navigateTo('/')
+    return
+  }
+  
+  console.log('🔍 [LOGIN PAGE] Auth store state:', auth.isAuthenticated, auth.user, auth.token)
 })
 
-const loading = ref(false)
-const error = ref('')
+const email = ref('')
+const password = ref('')
+const errorMsg = ref('')
 
-const form = ref({
-  email: '',
-  password: ''
-})
-
-const handleLogin = async () => {
-  loading.value = true
-  error.value = ''
+const onSubmit = async () => {
+  errorMsg.value = ''
 
   try {
-    const data = await $fetch('/api/auth/login', {
+    const result = await $fetch('/api/auth/login', {
       method: 'POST',
-      body: form.value
-    })
-
-    console.log('✅ [LOGIN PAGE] Login response:', data)
-    if (data.success && data.data) {
-      // บันทึก token ใน localStorage (ถ้าต้องการ)
-      if (data.data.token) {
-        localStorage.setItem('auth-token', data.data.token)
-        console.log('💾 [LOGIN PAGE] บันทึก token ใน localStorage')
+      body: {
+        email: email.value,
+        password: password.value
       }
+    })
+    console.log('🔄 [LOGIN PAGE] Login response:', result)
 
-      // Redirect ไปหน้า dashboard หรือหน้าหลัก
-      console.log('🔄 [LOGIN PAGE] Redirect ไปหน้า /')
-      await navigateTo('/')
+    if (!result?.success) {
+      errorMsg.value = result?.message || 'เข้าสู่ระบบไม่สำเร็จ'
+      return
     }
+
+    // เก็บ token + user ไว้ใน Pinia
+    auth.setAuth(result.data.token, result.data.user)
+    console.log('✅ [LOGIN PAGE] Set auth:', { token: result.data.token, user: result.data.user })
+    console.log('✅ [LOGIN PAGE] Auth store state:', { isAuthenticated: auth.isAuthenticated, hasUser: !!auth.user, hasToken: !!auth.token })
+    
+    // ใช้ navigateTo แทน router.push และรอให้ state ถูก set ก่อน
+    await nextTick()
+    await navigateTo('/')
   } catch (err) {
-    error.value = err.data?.message || err.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ'
-  } finally {
-    loading.value = false
+    errorMsg.value = err?.data?.message || 'เกิดข้อผิดพลาด'
   }
 }
 </script>
-
