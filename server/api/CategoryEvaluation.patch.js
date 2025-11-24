@@ -27,16 +27,16 @@ export default defineEventHandler(async (event) => {
 		}
 		console.log(decoded)		
 		const body = await readBody(event)
-		if (!body.id || !body.code || !body.name || !body.description) {
+		if (!body.id || !body.code || !body.name || !body.weight || !body.score_min || !body.score_max || !body.type || !body.description || !body.status || !body.topic_evaluation_id) {
 			return {
 				status: "error",
 				message: "Bad Request กรุณากรอกข้อมูลให้ครบ",
 				data: {
-					details: "กรุณากรอกข้อมูลให้ครบ id, code, name, description"
+					details: "กรุณากรอกข้อมูลให้ครบ id, code, name, weight, score_min, score_max, type, description, status, topic_evaluation_id"
 				}
 			}
 		}
-		const [result] = await connection.query('UPDATE CategoryEvaluation SET code = ?, name = ?, description = ? WHERE id = ?', [body.code, body.name, body.description, body.id])
+		const [result] = await connection.query('UPDATE CategoryEvaluation SET code = ?, name = ?, weight = ?, score_min = ?, score_max = ?, type = ?, description = ?, status = ?, topic_evaluation_id = ? WHERE id = ?', [body.code, body.name, body.weight, body.score_min, body.score_max, body.type, body.description, body.status, body.topic_evaluation_id, body.id])
 		if (result.affectedRows === 0) {
 			return {
 				status: "error",
@@ -53,7 +53,15 @@ export default defineEventHandler(async (event) => {
 				id: body.id,
 				code: body.code,
 				name: body.name,
-				description: body.description
+				weight: body.weight,
+				score_min: body.score_min,
+				score_max: body.score_max,
+				type: body.type,
+				description: body.description,
+				status: body.status,
+				topic_evaluation_id: body.topic_evaluation_id,
+				created_at: body.created_at,
+				updated_at: body.updated_at
 			}
 		}
 	} catch (error) {

@@ -27,42 +27,29 @@ export default defineEventHandler(async (event) => {
 		}
 		console.log(decoded)
 		const body = await readBody(event)
-		console.log(body)
-		if (
-			!body.code ||
-			!body.name ||
-			body.weight === undefined ||
-			body.score_min === undefined ||
-			body.score_max === undefined ||
-			!body.type ||
-			body.description === undefined ||
-			!body.status ||
-			body.topic_evaluation_id === undefined
-		) {
+		if (!body.code || !body.name || !body.year || !body.start_date || !body.end_date || !body.description || !body.status) {
 			return {
 				status: "error",
 				message: "Bad Request กรุณากรอกข้อมูลให้ครบ",
 				data: {
-					details: "กรุณากรอกข้อมูลให้ครบ code, name, weight, score_min, score_max, type, description, status, topic_evaluation_id"
+					details: "กรุณากรอกข้อมูลให้ครบ code, name, year, start_date, end_date, description, status"
 				}
 			}
 		}
-		const [result] = await connection.query('INSERT INTO CategoryEvaluation (code, name, weight, score_min, score_max, type, description, status, topic_evaluation_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [body.code, body.name, body.weight, body.score_min, body.score_max, body.type, body.description, body.status, body.topic_evaluation_id])
+		const [result] = await connection.query('INSERT INTO TopicEvaluation (code, name, year, start_date, end_date, description, status) VALUES (?, ?, ?, ?, ?, ?, ?)', [body.code, body.name, body.year, body.start_date, body.end_date, body.description, body.status])
 		console.log(result)
 		return {
 			status: "success",
-			message: "CategoryEvaluation created successfully",
+			message: "TopicEvaluation created successfully",
 			data: {
 				id: result.insertId,
 				code: body.code,
 				name: body.name,
-				weight: body.weight,
-				score_min: body.score_min,
-				score_max: body.score_max,
-				type: body.type,
+				year: body.year,
+				start_date: body.start_date,
+				end_date: body.end_date,
 				description: body.description,
 				status: body.status,
-				topic_evaluation_id: body.topic_evaluation_id,
 				created_at: body.created_at,
 				updated_at: body.updated_at
 			}
