@@ -101,11 +101,9 @@ export default defineEventHandler(async (event) => {
           password,
           department,
           role,
-          status,
-          created_at,
-          updated_at
+          status
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
       [
         body.firstname,
@@ -119,7 +117,7 @@ export default defineEventHandler(async (event) => {
     )
 
     const newUser = {
-      id: result.insertId,
+      id: result.insertId || result.id,
       firstname: body.firstname,
       lastname: body.lastname,
       email: body.email,

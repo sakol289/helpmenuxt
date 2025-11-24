@@ -6,9 +6,10 @@ export default defineEventHandler(async () => {
       evaluatee.id AS evaluatee_id,
       evaluatee.firstname AS evaluatee_firstname,
       evaluatee.lastname AS evaluatee_lastname,
-      SUM(CASE WHEN er.status = 'final' THEN er.total_score ELSE 0 END) AS total_score,
-      COUNT(CASE WHEN er.status = 'final' THEN 1 END) AS finalized_count,
-      COUNT(ca.id) AS assigned_committee
+      COUNT(ca.id) AS committee_count,
+      SUM(CASE WHEN er.status = 'final' THEN 1 ELSE 0 END) AS completed_count,
+      SUM(CASE WHEN er.status IS NULL OR er.status = 'draft' THEN 1 ELSE 0 END) AS pending_count,
+      AVG(er.total_score) AS avg_score
     FROM users evaluatee
     LEFT JOIN committee_assignments ca ON ca.evaluatee_id = evaluatee.id
     LEFT JOIN evaluation_results er

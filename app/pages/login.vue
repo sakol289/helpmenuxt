@@ -39,6 +39,7 @@ import { useAuthStore } from '~/stores/auth'
 definePageMeta({ layout: false })
 
 const auth = useAuthStore()
+const { fetchUser } = useAuth()
 
 // เช็คว่า login แล้วหรือยังเมื่อโหลดหน้า
 onMounted(() => {
@@ -75,6 +76,7 @@ const onSubmit = async () => {
   try {
     const result = await $fetch('/api/auth/login', {
       method: 'POST',
+      credentials: 'include',
       body: {
         email: email.value,
         password: password.value
@@ -82,7 +84,7 @@ const onSubmit = async () => {
     })
     console.log('🔄 [LOGIN PAGE] Login response:', result)
 
-    if (!result?.success) {
+    if (!result || result.status !== 'success') {
       errorMsg.value = result?.message || 'เข้าสู่ระบบไม่สำเร็จ'
       return
     }
@@ -91,6 +93,9 @@ const onSubmit = async () => {
     auth.setAuth(result.data.token, result.data.user)
     console.log('✅ [LOGIN PAGE] Set auth:', { token: result.data.token, user: result.data.user })
     console.log('✅ [LOGIN PAGE] Auth store state:', { isAuthenticated: auth.isAuthenticated, hasUser: !!auth.user, hasToken: !!auth.token })
+
+    // sync กับ useAuth (state กลาง) และยืนยัน session จากเซิร์ฟเวอร์
+    await fetchUser()
     
     // ใช้ navigateTo แทน router.push และรอให้ state ถูก set ก่อน
     await nextTick()

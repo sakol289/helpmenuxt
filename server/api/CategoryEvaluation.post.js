@@ -32,8 +32,6 @@ export default defineEventHandler(async (event) => {
 			!body.code ||
 			!body.name ||
 			body.weight === undefined ||
-			body.score_min === undefined ||
-			body.score_max === undefined ||
 			!body.type ||
 			body.description === undefined ||
 			!body.status ||
@@ -43,11 +41,14 @@ export default defineEventHandler(async (event) => {
 				status: "error",
 				message: "Bad Request กรุณากรอกข้อมูลให้ครบ",
 				data: {
-					details: "กรุณากรอกข้อมูลให้ครบ code, name, weight, score_min, score_max, type, description, status, topic_evaluation_id"
+					details: "กรุณากรอกข้อมูลให้ครบ code, name, weight, type, description, status, topic_evaluation_id"
 				}
 			}
 		}
-		const [result] = await connection.query('INSERT INTO CategoryEvaluation (code, name, weight, score_min, score_max, type, description, status, topic_evaluation_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [body.code, body.name, body.weight, body.score_min, body.score_max, body.type, body.description, body.status, body.topic_evaluation_id])
+		const [result] = await connection.query(
+			'INSERT INTO CategoryEvaluation (code, name, weight, type, description, status, topic_evaluation_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+			[body.code, body.name, body.weight, body.type, body.description, body.status, body.topic_evaluation_id]
+		)
 		console.log(result)
 		return {
 			status: "success",
@@ -57,8 +58,6 @@ export default defineEventHandler(async (event) => {
 				code: body.code,
 				name: body.name,
 				weight: body.weight,
-				score_min: body.score_min,
-				score_max: body.score_max,
 				type: body.type,
 				description: body.description,
 				status: body.status,

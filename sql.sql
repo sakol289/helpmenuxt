@@ -17,8 +17,6 @@ CREATE TABLE `CategoryEvaluation` (
 	`code` varchar(30) NOT NULL,
 	`name` varchar(255) NOT NULL, 
 	`weight` int NOT NULL,
-	`score_min` int NOT NULL,
-	`score_max` int NOT NULL,
 	`type` enum('score', 'yes_or_no','file_or_url') NOT NULL,
 	`description` text,
 	`status` enum('active', 'inactive') NOT NULL DEFAULT 'active',
@@ -53,32 +51,50 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `email`, `firstname`, `lastname`, `password`, `department`, `role`, `status`, `create_at`, `updated_at`) VALUES
 (1, 'admin@admin.com', 'admin', 'admin', '12345678', 'ไฟฟ้ากำลัง', 'ผู้ดูแล', 'active', '2025-11-15 17:00:00', '2025-11-24 12:34:05');
 
-CREATE TABLE `evaluation_rounds` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `title` varchar(255) NOT NULL,
-  `year` varchar(4) NOT NULL,
-  `status` enum('draft', 'active', 'archived') NOT NULL DEFAULT 'active',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 CREATE TABLE `committee_assignments` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `evaluation_id` int NOT NULL,
   `evaluator_id` int NOT NULL,
   `evaluatee_id` int NOT NULL,
-  `role` enum('chair', 'member') NOT NULL DEFAULT 'member',
-  `status` enum('not_started', 'in_progress', 'submitted') NOT NULL DEFAULT 'not_started',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uniq_assignment` (`evaluation_id`, `evaluator_id`, `evaluatee_id`)
+  `role` enum('ประธาน', 'กรรมการ') NOT NULL DEFAULT 'กรรมการ',
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `evaluation_results` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `evaluation_id` int NOT NULL,
   `evaluator_id` int NOT NULL,
   `evaluatee_id` int NOT NULL,
   `total_score` int DEFAULT NULL,
   `summary` text,
   `status` enum('draft', 'final') NOT NULL DEFAULT 'draft',
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `self_upload_port` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `topic_id` int NOT NULL,
+  `category_id` int NOT NULL,
+  `status` enum('draft', 'submitted') NOT NULL DEFAULT 'draft',
+  `file_original_name` varchar(255),
+  `file_stored_name` varchar(255),
+  `file_mime` varchar(100),
+  `file_size` int DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `evaluation_category_results` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `evaluator_id` int NOT NULL,
+  `evaluatee_id` int NOT NULL,
+  `category_id` int NOT NULL,
+  `value_number` decimal(10,2) DEFAULT NULL,
+  `value_boolean` tinyint(1) DEFAULT NULL,
+  `value_text` text,
+  `status` enum('draft', 'final') NOT NULL DEFAULT 'draft',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_eval_category` (`evaluator_id`, `evaluatee_id`, `category_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
